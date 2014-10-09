@@ -22,7 +22,9 @@
 {
     if(![self.content isEqualToString:content]){
         _content = content;
+        
         self.l_content.text = _content;
+
     }
 }
 
@@ -38,6 +40,10 @@
 - (void)awakeFromNib {
     // Initialization code
     self.iv_image.contentMode = UIViewContentModeScaleAspectFit;
+    self.ai_fetchingImage.hidesWhenStopped = YES;
+    
+    self.l_content.lineBreakMode = NSLineBreakByWordWrapping;
+    self.l_content.numberOfLines = 0;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

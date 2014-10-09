@@ -12,5 +12,6 @@
 
 @property (strong, nonatomic) NSString *content;
 @property (strong, nonatomic) UIImage *image;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *ai_fetchingImage;
 
 @end

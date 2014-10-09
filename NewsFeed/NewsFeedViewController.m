@@ -15,6 +15,10 @@
 @property (weak, nonatomic) IBOutlet UITableView *tv_news;
 
 @property (strong, nonatomic) NSMutableArray *newsArray;
+@property (strong, nonatomic) NSMutableDictionary *imageCache;
+
+@property (nonatomic) CGRect screenRect;
+
 
 @end
 
@@ -24,6 +28,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     self.newsArray = [[NSMutableArray alloc] initWithCapacity:10];
+    self.imageCache = [[NSMutableDictionary alloc] initWithCapacity:10];
     [self setViews];
     [self fetchDataFromParse];
 }
@@ -32,6 +37,9 @@
 {
     self.tv_news.dataSource = self;
     self.tv_news.delegate = self;
+    
+    self.screenRect = [[UIScreen mainScreen] bounds];
+
 }
 
 - (void)fetchDataFromParse
@@ -78,19 +86,40 @@
     cell.content = obj[@"content"];
     
     PFFile *imageFile = obj[@"imageFile"];
-    NSData *imageData = [imageFile getData];
+    if(imageFile){
+    
+        UIImage *image = [self.imageCache objectForKey:obj.objectId];
+        if(!image){
+            [cell.ai_fetchingImage startAnimating];
+    //        PFFile *imageFile = obj[@"imageFile"];
+            //    [self setImageWithImageFile:imageFile ForCell:cell];
+            [imageFile getDataInBackgroundWithBlock:^(NSData *data, NSError *error) {
+                [self setImageWithImageData:data OFobjectID:obj.objectId ForCell:cell];
+            }];
+        }
+        cell.image = image;
+    }
+    
+    return cell;
+    
+}
+
+- (void)setImageWithImageData:(NSData*)imageData
+                   OFobjectID:(NSString*)objectID
+                      ForCell:(NewsCell*)cell
+{
     UIImage *image = [UIImage imageWithData:imageData];
     
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
-    CGFloat screenWidth = screenRect.size.width;
+    CGFloat screenWidth = self.screenRect.size.width;
     
     CGFloat newImageWidth = screenWidth - 16.0;
     CGFloat newImageHeight = image.size.height * (newImageWidth / image.size.width);
     
     image = [self imageWithImage:image scaledToSize:CGSizeMake(newImageWidth, newImageHeight)];
-    cell.image = image;
-    return cell;
+    [self.imageCache setObject:image forKey:objectID];
     
+    [cell.ai_fetchingImage stopAnimating];
+    [self.tv_news reloadData];
 }
 
 - (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize {
